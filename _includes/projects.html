@@ -1,0 +1,42 @@
+
+<div class="projects">
+    <div class="images">
+        <div><img src="/assets/img/me-1.jpg" alt=""></div>
+        <div><img src="/assets/img/me-2.jpg" alt=""></div>
+        <div><img src="/assets/img/me-3.jpg" alt=""></div>
+    </div>
+
+
+    <h1>Fun Projects</h1>
+    <div class="projects-container">
+        {% for project in site.projects %}
+        <div class="project">
+            <div class="project-content">
+                <h2>
+                    {% if project.link %}
+                        <a href="{{ project.link }}" target="_blank" title="{{ project.title }}">{{ project.title }}</a>
+                    {% else %}
+                        {{ project.title }}
+                    {% endif %}
+                </h2>
+                <ul class="project-meta">
+                    {% if project.github %}
+                    <li class="link"><a href="{{ project.github }}" title="View source on Github" target="_blank"><i class="fab fa-github"></i> Source</a></li>
+                    {% endif %}
+                    {% for tag in project.tags %}
+                    <li class="tag">{{ tag }}</li>
+                    {% endfor %}
+                </ul>
+                <p>{{ project.content | markdownify }}</p>
+            </div>
+            {% if project.image %}
+            <div class="project-image">
+                <img src="{{ project.image }}" alt="Screenshot of {{ project.link }}">
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+
+</div>
