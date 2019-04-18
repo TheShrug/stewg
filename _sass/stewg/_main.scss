@@ -151,3 +151,34 @@ a {
     }
 
 }
+
+ @media screen and (max-width: $break1)  { 
+     .home .feature > * {
+         margin:0 50px;
+     }
+ 
+ }
+
+  @media screen and (max-width: $break2) { 
+     .home {
+         .feature {
+             flex-direction:column;
+             > * {
+                 margin: 25px;
+             }
+         }
+     }
+     .projects {
+         .images {
+             margin-top:-50px;
+             > div {
+                 margin: 0 5px;
+             }
+             img {
+                 height: 100px;
+                 width: 100px;
+             }
+         }
+     }
+ 
+ }
