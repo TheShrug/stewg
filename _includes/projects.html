@@ -21,18 +21,23 @@
                 </h2>
                 <ul class="project-meta">
                     {% if project.github %}
-                    <li class="link"><a href="{{ project.github }}" title="View source on Github" target="_blank"><i class="fab fa-github"></i> Source</a></li>
+                        <li class="link"><a href="{{ project.github }}" title="View source on Github" target="_blank"><i class="fab fa-github"></i> Source</a></li>
                     {% endif %}
                     {% for tag in project.tags %}
-                    <li class="tag">{{ tag }}</li>
+                        <li class="tag">{{ tag }}</li>
                     {% endfor %}
                 </ul>
-                <p>{{ project.content | markdownify }}</p>
+                {{ project.content | markdownify }}
+                {% if project.contact %}
+                    <p class="reach-out">
+                        <a href="mailto:stewart.m.gordon@gmail.com{{ project.contact }}" title="Seriously! I don't mind sending you some more samples!">Reach Out<i class="far fa-xs fa-envelope"></i></a>
+                    </p>
+                {% endif %}
             </div>
             {% if project.image %}
-            <div class="project-image">
-                <img src="{{ project.image }}" alt="Screenshot of {{ project.link }}">
-            </div>
+                <div class="project-image">
+                    <img src="{{ project.image }}" alt="Screenshot of {{ project.link }}">
+                </div>
             {% endif %}
         </div>
         {% endfor %}

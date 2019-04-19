@@ -4,6 +4,7 @@ tags:
     - Employment
     - Freelance
 date: 2019-04-18 00:00:00
+contact: ?subject=Work Samples&body=Hi Stewart, I was just admiring your website! I would love to see some samples of your other work!
 ---
 I've been programming professionally since 2013 and have created dozens of websites and worked on dozens more.
 
