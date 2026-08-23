@@ -117,8 +117,18 @@ jobs:
             STATUS=$(echo "$OUT" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status",""))' 2>/dev/null || echo "?")
             ONLINE=$(echo "$OUT" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("last_online_at",""))' 2>/dev/null || echo "?")
             echo "attempt $i: status=$STATUS last_online_at=$ONLINE"
-            if [ "$STATUS" = "running:healthy" ] && [ "$ONLINE" != "$BEFORE_ONLINE" ]; then
-              echo "new container is healthy and serving"
+            # `running:healthy` requires a HEALTHCHECK in the image. This one has none, so
+            # Coolify reports `running:unknown` forever and waiting for healthy never returns -
+            # it failed a perfectly good deploy that way on 2026-08-23. Accept any `running:`
+            # state here; the assertion that actually proves this deploy worked is the external
+            # HTTP check below, which is the right proof for a static site anyway.
+            #
+            # Adding a HEALTHCHECK to the image would be better and is its own ticket. Do not
+            # copy this relaxation into the Laravel repos - they have one, and `healthy` there
+            # is a real signal worth insisting on.
+            case "$STATUS" in running:*) RUNNING=1 ;; *) RUNNING=0 ;; esac
+            if [ "$RUNNING" = "1" ] && [ "$ONLINE" != "$BEFORE_ONLINE" ]; then
+              echo "new container is running and serving (status=$STATUS)"
               exit 0
             fi
             sleep 15
