@@ -1,0 +1,55 @@
+# Build the site on every branch except master, and on every pull request.
+#
+# master is deliberately absent: deploy.yml will own it and run this same build as the gate in
+# front of the deploy. Two workflows triggering on master would do the same work twice and tell
+# you the same thing - and the copy that matters is the one that can stop a release.
+#
+# Trunk-based development removed the staging beat (Conventions/Branching.md in the homelab
+# vault): merging to master IS the release, so this job is the only thing between a merged PR and
+# the live site.
+#
+# There is no test suite here and there should not be one - this is a static Jekyll site. The
+# meaningful gate is "does it still build", which catches the failures this repo can actually
+# have: bad front matter, a missing include, a Liquid syntax error, a broken layout reference.
+# Those are exactly the mistakes that publish a blank or half-rendered page.
+name: CI
+
+on:
+  push:
+    branches-ignore: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: jekyll build
+    runs-on: ubuntu-latest
+
+    env:
+      JEKYLL_ENV: production
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # bundler-cache handles both `bundle install` and caching the gems. Gemfile.lock is
+      # committed, so the resolved Jekyll is whatever the lockfile pins rather than whatever
+      # rubygems served today.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      # --strict_front_matter turns a malformed front-matter block from a silently skipped page
+      # into a failed build. Without it Jekyll shrugs and publishes nothing where that page
+      # should be, which is the failure mode a build gate exists to catch.
+      #
+      # JEKYLL_ENV=production above matters too: it is what makes Jekyll emit production-only
+      # blocks, so a template that only breaks in production breaks here instead of on the site.
+      - run: bundle exec jekyll build --strict_front_matter --trace
+
+      # A build that produces nothing still exits 0 if every page was skipped. Cheap insurance
+      # against a green check that means the opposite of what it looks like.
+      - name: Confirm the build actually produced a site
+        run: |
+          test -f _site/index.html || { echo "no _site/index.html - build produced nothing"; exit 1; }
+          echo "pages built: $(find _site -name '*.html' | wc -l)"
