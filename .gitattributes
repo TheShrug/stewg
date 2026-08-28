@@ -1,0 +1,7 @@
+# This working tree gets mounted into the Linux devcontainer, so anything
+# executed there must have LF endings regardless of the host checking it out.
+# core.autocrlf=true on Windows would otherwise hand bash a setup.sh full of
+# \r and it fails with "$'\r': command not found" — a fresh-clone-only bug,
+# invisible on a machine where the files were authored rather than checked out.
+*.sh      text eol=lf
+Makefile  text eol=lf
