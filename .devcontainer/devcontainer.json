@@ -1,0 +1,26 @@
+{
+  "name": "stewg",
+  // Ruby 3.3 to match the production Dockerfile's build stage. The Microsoft
+  // image is used rather than a bare ruby:3.3 because it ships make, git and a
+  // non-root user — and `make` being present is the entire point of this
+  // container: it is not on the Windows host, in Git Bash, or in PowerShell.
+  "image": "mcr.microsoft.com/devcontainers/ruby:3.3",
+  // jekyll serve, per the fleet port table in homelab's Local Dev Interface.
+  "forwardPorts": [8003],
+  "portsAttributes": {
+    "8003": { "label": "stewg (jekyll serve)", "onAutoForward": "notify" }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "Shopify.ruby-lsp"
+      ]
+    }
+  }
+}

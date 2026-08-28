@@ -6,6 +6,27 @@ repository.
 Personal site — a Jekyll static site (`_config.yml`, `_layouts/`, `_includes/`, `_sass/`,
 `_posts/`, `_projects/`) built to `_site/` and served by nginx from the container.
 
+## Local dev interface
+
+`make` is the interface, and it lives **inside the devcontainer** — Ruby, Jekyll and `make`
+itself are none of them on the Windows host. Open the repo in the devcontainer
+(`.devcontainer/`), which runs `bundle install` on create, then:
+
+| | |
+| --- | --- |
+| `make` | List the targets. `.DEFAULT_GOAL := help` |
+| `make build` | `jekyll build` into `_site/` |
+| `make test` | `jekyll build --strict_front_matter` |
+| `make run` | `jekyll serve` with livereload on **8003**, printing the URL as the last line |
+
+There is no `make database` here: static site, no database, nothing in the nightly R2 dump.
+
+**Port 8003 is assigned, not defaulted.** Every app in the fleet has a fixed port so two can run
+at once; override with `PORT=` if you must, but the number is written down on purpose. The
+fleet-wide table and reasoning live in the `homelab` vault at
+`Conventions/Local Dev Interface.md` — restated here because that vault is private and this repo
+is public.
+
 ## Work queue
 
 Work lives in this repo's **GitHub Issues**, one issue per item, with exactly one `type:` label
@@ -27,9 +48,11 @@ Two levels:
   `.github/workflows/ci.yml` runs `jekyll build` on every non-`master` branch and PR, so the PR
   is where a broken build gets caught before it can reach the live site.
 
-There is deliberately **no test suite** — this is a static site, so the meaningful gate is "does
+There is deliberately **no spec suite** — this is a static site, so the meaningful gate is "does
 it still build", which catches bad front matter, a missing include, a Liquid syntax error, a
-broken layout reference. That build is the entire distance between a merge and production, so a
+broken layout reference. That gate is `make test`, which is `jekyll build --strict_front_matter`
+and nothing more. Said explicitly because a repo where `make test` is missing and a repo where
+`make test` is meaningless look identical from outside, and only one of those is fine. That build is the entire distance between a merge and production, so a
 PR is the only review point there is.
 
 Name the branch:
