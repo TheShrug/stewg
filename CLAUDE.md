@@ -27,6 +27,31 @@ fleet-wide table and reasoning live in the `homelab` vault at
 `Conventions/Local Dev Interface.md` — restated here because that vault is private and this repo
 is public.
 
+### When `make` is not on PATH
+
+`make` lives in the devcontainer image (`mcr.microsoft.com/devcontainers/ruby:3.3`, which ships it
+— that is why the image was chosen), and never on the Windows host: Git Bash and PowerShell have
+neither `make` nor Ruby. So a missing `make` means you are in the wrong place. **That is a location
+error, not a tooling gap** — don't run `bundle`/`jekyll` "directly" instead, and don't reconstruct
+a target's recipe by hand. Get into the container:
+
+- **Devcontainer already up?** Find it with `docker ps`, then
+  `docker exec -w /workspaces/stewg <container> make test`.
+- **Nothing running?** A throwaway container over the same image works from Git Bash — verified
+  2026-08-30 for bare `make`:
+
+  ```sh
+  MSYS_NO_PATHCONV=1 docker run --rm \
+    -v "/$PWD://workspaces/stewg" -w //workspaces/stewg \
+    mcr.microsoft.com/devcontainers/ruby:3.3 make
+  ```
+
+  The leading `/` on `$PWD` and the doubled slashes are Git Bash path-mangling protection, not
+  typos. `build` and `test` need the gems, which a throwaway container does not have, so chain
+  them: `... ruby:3.3 sh -c 'bundle install && make test'`.
+- **Otherwise say the devcontainer isn't available and stop.** A `jekyll build` faked some other
+  way is not the gate `make test` is, and this repo's only gate is that build.
+
 ## Work queue
 
 Work lives in this repo's **GitHub Issues**, one issue per item, with exactly one `type:` label
