@@ -27,6 +27,31 @@ fleet-wide table and reasoning live in the `homelab` vault at
 `Conventions/Local Dev Interface.md` — restated here because that vault is private and this repo
 is public.
 
+### When `make` is not on PATH
+
+`make` lives in the devcontainer image (`mcr.microsoft.com/devcontainers/ruby:3.3`, which ships it
+— that is why the image was chosen), and never on the Windows host: Git Bash and PowerShell have
+neither `make` nor Ruby. So a missing `make` means you are in the wrong place. **That is a location
+error, not a tooling gap** — don't run `bundle`/`jekyll` "directly" instead, and don't reconstruct
+a target's recipe by hand. Get into the container:
+
+- **Devcontainer already up?** Find it with `docker ps`, then
+  `docker exec -w /workspaces/stewg <container> make test`.
+- **Nothing running?** A throwaway container over the same image works from Git Bash — verified
+  2026-08-30 for bare `make`:
+
+  ```sh
+  MSYS_NO_PATHCONV=1 docker run --rm \
+    -v "/$PWD://workspaces/stewg" -w //workspaces/stewg \
+    mcr.microsoft.com/devcontainers/ruby:3.3 make
+  ```
+
+  The leading `/` on `$PWD` and the doubled slashes are Git Bash path-mangling protection, not
+  typos. `build` and `test` need the gems, which a throwaway container does not have, so chain
+  them: `... ruby:3.3 sh -c 'bundle install && make test'`.
+- **Otherwise say the devcontainer isn't available and stop.** A `jekyll build` faked some other
+  way is not the gate `make test` is, and this repo's only gate is that build.
+
 ## Work queue
 
 Work lives in this repo's **GitHub Issues**, one issue per item, with exactly one `type:` label
@@ -58,11 +83,11 @@ PR is the only review point there is.
 Name the branch:
 
 ```
-TheShrug/<issue>-<type>-<slug>
+<issue>-<type>-<slug>
 ```
 
 ```
-^TheShrug/[0-9]+-(tckt|feat|bug|chore|spike)-[a-z0-9]+(-[a-z0-9]+)*$
+^[0-9]+-(tckt|feat|bug|chore|spike)-[a-z0-9]+(-[a-z0-9]+)*$
 ```
 
 - `<issue>` is the **issue number in this repo** — not a PR number. A PR number doesn't exist
@@ -72,7 +97,14 @@ TheShrug/<issue>-<type>-<slug>
 - `<slug>` is lowercase `a-z0-9-`; `.` and `_` collapse to `-` (`stewg.dev` → `stewg-dev`); aim
   for ≤ 40 characters. The issue holds the full title, so this is a handle, not a summary.
 
-So issue #12 `type: tckt` "Fix the footer year" becomes `TheShrug/12-tckt-fix-footer-year`.
+So issue #12 `type: tckt` "Fix the footer year" becomes `12-tckt-fix-footer-year`.
+
+**No owner prefix.** The name used to start `TheShrug/`. It was dropped 2026-09-03: in a
+single-maintainer fleet every branch carried it, so it distinguished nothing, and Orca's own
+`branchPrefix` setting prepends the git username silently — two layers adding a prefix at once,
+which is how `TheShrug/TheShrug-79-...` got created. Orca is set to `None` now, so `--name` is
+the whole branch name. Existing `TheShrug/...` branches are grandfathered by the same date rule
+below.
 
 **No issue, no branch** — the number is mandatory, so every branch traces back to the queue.
 This replaces the old `chore/<slug>` / `feat/<slug>` convention and, deliberately, the "or
